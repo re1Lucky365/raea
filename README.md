@@ -1,3 +1,90 @@
+ssh-add -l
+ssh -T git@github.com
+
+git@github.com
+git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
+Set-Service -Name ssh-agent -StartupType Automatic
+Start-Service ssh-agent
+Host github.com
+  HostName github.com
+  User git
+  AddKeysToAgent yes
+  UseKeychain yes
+  IdentityFile ~/.ssh/id_ed25519
+  IdentitiesOnly yes
+github.com
+source ~/.bashrc
+# Auto-start ssh-agent and load GitHub SSH key
+SSH_ENV="$HOME/.ssh/agent.env"
+
+start_agent() {
+  mkdir -p "$HOME/.ssh"
+  chmod 700 "$HOME/.ssh"
+  ssh-agent -s | sed 's/^echo/#echo/' > "$SSH_ENV"
+  chmod 600 "$SSH_ENV"
+  . "$SSH_ENV" > /dev/null
+  ssh-add "$HOME/.ssh/id_ed25519"
+}
+
+if [ -f "$SSH_ENV" ]; then
+  . "$SSH_ENV" > /dev/null
+  if ! kill -0 "$SSH_AGENT_PID" 2>/dev/null; then
+    start_agent
+  elif ! ssh-add -l >/dev/null 2>&1; then
+    ssh-add "$HOME/.ssh/id_ed25519"
+  fi
+else
+  start_agent
+fi
+chmod +x ~/bin/git-ssh-sync.sh
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "$#" -ne 2 ]; then
+  echo "Usage: $0 <github-username> <repo-name>"
+  exit 1
+fi
+
+# Strip accidental whitespace, quotes, or stray pasted prefixes
+raw_user="$1"
+raw_repo="$2"
+
+clean_user="$(printf '%s' "$raw_user" | tr -d '[:space:]')"
+clean_repo="$(printf '%s' "$raw_repo" | tr -d '[:space:]')"
+clean_repo="${clean_repo%.git}"
+
+target_url="git@github.com:${clean_user}/${clean_repo}.git"
+
+git rev-parse --is-inside-work-tree >/dev/null
+git remote set-url origin "$target_url"
+
+echo "Remote set to: $(git remote get-url origin)"
+ssh -T git@github.com || true
+git ls-remote origin
+# Check current remotes
+git remote -v
+
+# Set or update the origin remote to SSH
+git remote set-url origin git@github.com:<your-username>/<master-repo>.git
+
+# Test SSH authentication to GitHub
+ssh -T git@github.com
+
+# Verify read access to the repository's refs
+git ls-remote origin
+git remote set-url origin git@github.com:<your-username>/<your-repo>.git
+ssh -T git@github.com
+cat ~/.ssh/id_ed25519.pub
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+your-email@example.comssh-keygen -t ed25519 -C "your-email@example.com"
+git remote add origin https://github.com/<your-username>/my-first-repo.git
+git push -u origin main
+git add .
+git commit -m "Initial commit"
+git init -b main
+user.name
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/logo/cat-white.svg">
